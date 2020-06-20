@@ -116,14 +116,18 @@ for day in range(count_days):
 
 total_lap_length = total_laps * lap_length
 
-print("Total laps: {}".format(total_laps))
-print("Distance driven: {ln:.2f} km".format(ln=total_lap_length))
-total_emissions = json.dumps(
-    calculate_emissions(total_lap_length,
-                        emission_limits.get(standard, {}),
-                        car_co2_emmissions.get(car, 0)),
-    )
-print("Total emissions: {}".format(total_emissions))
+print("Total parking laps: {}".format(total_laps))
+print("Parking distance driven: {ln:.2f} km".format(ln=total_lap_length))
+
+total_emissions = calculate_emissions(
+    total_lap_length,
+    emission_limits.get(standard, {}),
+    car_co2_emmissions.get(car, 0))
+
+savings = total_emissions.get('CO2_total', 0) - minimal_emissions_per_day[-1].get('CO2_total', 0)
+print("CO2 savings estimate at end of year: {:.2f} kg / {:.2f} %".format(
+    savings / 1e3,
+    savings / total_emissions.get('CO2_total', 1)))
 
 x = np.arange(0, count_days, 1)
 y = np.array(list(map(lambda x: x.get("CO2_total", 0) / 1e3, emissions_per_day)))

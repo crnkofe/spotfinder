@@ -6,7 +6,8 @@
 Takes a parking lot as input, fills it up at random with cars, then uses
 random starting position and finds the nearest parking spot.
 
-Generates directions for each car
+Generates directions for a car appearing at a starting spot.
+This script will fill up the parking lot until all sports are taken
 
 Legend:
     o - impassable terrain
@@ -25,12 +26,16 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 
+# this is 2d map direction which is wrong (driver at the beginning is facing
+# forward
 movement_map = {
     (0, 1): "right",
     (0, -1): "left",
     (1, 0): "down",
     (-1, 0):  "up"
 }
+
+clockwise_directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 
 with open(sys.argv[1]) as map_file:
@@ -119,11 +124,49 @@ def trace_path(start_loc, end, parent):
     path = []
     while tuple(end) != tuple(start_loc):
         path.insert(0, end)
-        end = parents[tuple(end)]
+        end = parent[tuple(end)]
     return [start_loc] + path
 
 
-def instructions(path):
+def create_driver_instructions(path):
+    movements = []
+    previous = path[0]
+    next = list(path[1])
+    direction = [x - y for x, y in zip(next, previous)]
+    steps = 1
+    for loc in path[2:]:
+        new_direction = [x - y for x, y in zip(list(loc), next)]
+        if tuple(new_direction) != tuple(direction):
+            idx_of = clockwise_directions.index(tuple(direction))
+            next_idx_of = (idx_of + 1) % len(clockwise_directions)
+            if tuple(new_direction) == clockwise_directions[next_idx_of]:
+                turn = "right"
+            else:
+                turn = "left"
+
+            movements.append({
+                "move": "forward",
+                "steps": steps
+            })
+            movements.append({
+                "turn": turn,
+                "steps": 0
+            })
+            direction = new_direction
+            steps = 1
+        else:
+            steps += 1
+        previous = next
+        next = loc
+
+    movements.append({
+        "move": "forward",
+        "steps": steps
+    })
+    return movements
+
+
+def instructions_2d(path):
     movements = []
     previous = path[0]
     next = list(path[1])
@@ -133,8 +176,8 @@ def instructions(path):
         new_direction = [x - y for x, y in zip(list(loc), next)]
         if tuple(new_direction) != tuple(direction):
             movements.append({
-                "move": movement_map[tuple(direction)],
-                "steps": steps
+                "turn": movement_map[tuple(direction)],
+                "steps_forward": steps
             })
             direction = new_direction
             steps = 1
@@ -150,22 +193,41 @@ def instructions(path):
     return movements
 
 
+def find_space_for_driver(lot):
+    start_loc = select_starting_point(lot)
+    parking_loc, parents = breadth_first_search(start_loc, lot)
+    if parking_loc is None:
+        return None, None
+    path = trace_path(start_loc, parking_loc, parents)
+
+    new_lot = [x for x in lot]
+
+    row_idx = parking_loc[0]
+
+    row = list(lot[row_idx])
+    row[parking_loc[1]] = 'c'
+    new_lot[row_idx] = "".join(row)
+
+    lot_copy = [x for x in lot]
+    for p in path:
+        s = lot_copy[p[0]]
+        split_c = [c for c in s]
+        split_c[p[1]] = 'x'
+        lot_copy[p[0]] = "".join(split_c)
+
+    # uncomment to check entire parking lot
+    # print("\n".join(lot_copy))
+
+    return new_lot, create_driver_instructions(path)
+
+
 lot = fill_lot(map, 35)
+print ("Initial state\n {}".format("\n".join(lot)))
 
-start_loc = select_starting_point(lot)
-parking_loc, parents = breadth_first_search(start_loc, lot)
-path = trace_path(start_loc, parking_loc, parents)
-
-print("\n".join(lot))
-
-for p in path:
-    s = lot[p[0]]
-    split_c = [c for c in s]
-    split_c[p[1]] = 'x'
-    lot[p[0]] = "".join(split_c)
-
-print("\n")
-print("\n".join(lot))
-
-
-print(instructions(path))
+new_lot = lot
+while new_lot is not None:
+    new_lot, instructions = find_space_for_driver(new_lot)
+    if not new_lot:
+        print("Parking spot full")
+    else:
+        print("Instructions: {}".format(instructions))

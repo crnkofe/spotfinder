@@ -8,3 +8,8 @@ mkvirtualenv --python=/usr/bin/python3 spotfinder
 workon spotfinder
 pip install -r requirements.txt
 ```
+
+To run an estimation of CO2 savings do
+```
+python3 estimate_emissions.py
+```

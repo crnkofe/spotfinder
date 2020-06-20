@@ -4,57 +4,55 @@
 """This is a partial transcript of EURO standard emissions from
    https://www.rac.co.uk/drive/advice/emissions/euro-emissions-standards/
 
-   Also some function to calculate and display emissions given a set of parameters:
-   -
+   Also some function to calculate and display emissions given a fixed set of
+   parameters
 """
 
-import json
 import random
 from matplotlib import pyplot as plt
 import numpy as np
-import math #needed for definition of pi
 
 
 emission_limits = {
     # EURO 6 (Petrol)
-    "euro_6" : {
+    "euro_6": {
         # Implementation date (new approvals): 1 September 2014
-        # Implementation date (most new registrations - see important point below table above): 1
-        "CO": 1.0, #g/km
-        "THC": 0.10, #g/km
-        "NMHC": 0.068, #g/km
-        "NOx": 0.06 #g/km
+        # Implementation date (most new registrations)
+        "CO": 1.0,  # g/km
+        "THC": 0.10,  # g/km
+        "NMHC": 0.068,  # g/km
+        "NOx": 0.06  # g/km
     },
     # EURO 5 (Petrol)
     "euro_5": {
         # Implementation date (new approvals): 1 September 2009
         # Implementation date (all new registrations): 1 January 2011
-        "CO": 1.0, #g/km
-        "THC": 0.10, #g/km
-        "NMHC": 0.068, #g/km
-        "NOx": 0.06, #g/km
+        "CO": 1.0,  # g/km
+        "THC": 0.10,  # g/km
+        "NMHC": 0.068,  # g/km
+        "NOx": 0.06,  # g/km
     },
     # Euro 4 emissions standards (petrol)
     "euro_4": {
         # Implementation date (new approvals): 1 January 2005
         # Implementation date (all new registrations): 1 January 2006
-        "CO": 1.0, #g/km
-        "THC": 0.10, #g/km
-        "NOx": 0.08 #g/km
+        "CO": 1.0,  # g/km
+        "THC": 0.10,  # g/km
+        "NOx": 0.08  # g/km
     },
-    #Euro 3 (EC2000) (Petrol)
+    # Euro 3 (EC2000) (Petrol)
     "euro_3": {
-        #Implementation date (new approvals): 1 January 2000
-        #Implementation date (all new registrations): 1 January 2001
-        "CO": 2.3, #g/km
-        "THC": 0.20, #g/km
-        "NOx": 0.15, #g/km
+        # Implementation date (new approvals): 1 January 2000
+        # Implementation date (all new registrations): 1 January 2001
+        "CO": 2.3,  # g/km
+        "THC": 0.20,  # g/km
+        "NOx": 0.15,  # g/km
     }
 }
 
 
 car_co2_emmissions = {
-    "opel_corsa_14": 134.22 # g/km # originally 216 g/mile
+    "opel_corsa_14": 134.22  # g/km # originally 216 g/mile
 }
 
 
@@ -87,9 +85,9 @@ def simulate_laps(prob, max_laps):
 
 def calculate_emissions(distance, emission_limits, co2_limit):
     return {
-        "CO_total": distance * emission_limits.get("CO", 0), # g
+        "CO_total": distance * emission_limits.get("CO", 0),  # g
         "THC_total": distance * emission_limits.get("THC", 0),  # g
-        "NMHC_total": distance * emission_limits.get("NMHC", 0), # g
+        "NMHC_total": distance * emission_limits.get("NMHC", 0),  # g
         "NOx_total": distance * emission_limits.get("NOx", 0),
         "CO2_total": distance * co2_limit
     }
@@ -124,16 +122,20 @@ total_emissions = calculate_emissions(
     emission_limits.get(standard, {}),
     car_co2_emmissions.get(car, 0))
 
-savings = total_emissions.get('CO2_total', 0) - minimal_emissions_per_day[-1].get('CO2_total', 0)
+savings = total_emissions.get('CO2_total', 0) - \
+    minimal_emissions_per_day[-1].get('CO2_total', 0)
 print("CO2 savings estimate at end of year: {:.2f} kg / {:.2f} %".format(
     savings / 1e3,
     savings / total_emissions.get('CO2_total', 1)))
 
 x = np.arange(0, count_days, 1)
-y = np.array(list(map(lambda x: x.get("CO2_total", 0) / 1e3, emissions_per_day)))
+y = np.array(
+    list(map(lambda x: x.get("CO2_total", 0) / 1e3, emissions_per_day)))
 plt.plot(x, y, label="CO2 no-action estimate")
 
-y_min = np.array(list(map(lambda x: x.get("CO2_total", 0) / 1e3, minimal_emissions_per_day)))
+y_min = np.array(
+    list(map(lambda x: x.get("CO2_total", 0) / 1e3,
+             minimal_emissions_per_day)))
 plt.plot(x, y_min, label="CO2 spotfinder estimate")
 
 plt.xlabel("day")

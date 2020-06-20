@@ -13,3 +13,8 @@ To run an estimation of CO2 savings do
 ```
 python3 estimate_emissions.py
 ```
+
+To run an algorithm to find nearest parking spot go with
+```
+python3 finder.py micro_lot.txt
+```
